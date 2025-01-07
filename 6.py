@@ -27,7 +27,11 @@ X = pd.get_dummies(X)
 # Build the decision tree using the ID3 algorithm
 clf = DecisionTreeClassifier(criterion='entropy')
 clf = clf.fit(X, y)
-
+# Visualize the decision tree
+plt.figure(figsize=(12, 8))
+tree.plot_tree(clf, feature_names=X.columns, class_names=clf.classes_, filled=True)
+plt.title("Decision Tree Visualization")
+plt.show()
 
 
 # Ensure that the new sample contains all columns that were used during training
@@ -51,4 +55,5 @@ new_sample = new_sample.reindex(columns=X.columns, fill_value=0)
 prediction = clf.predict(new_sample)
 print("Prediction for the new sample:", prediction[0])
 
-6
+
+
