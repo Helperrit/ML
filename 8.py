@@ -1,3 +1,4 @@
+# 8.Write a program to Demonstrate for the following data, which specify classifications for nine combinations of VAR1 and VAR2 predict a classification for a case where VAR1=0.906 and VAR2=0.606, using the result of k-means clustering with 3 means (i.e., 3centroids)
 from sklearn.cluster import KMeans
 import numpy as np
 import pandas as pd
