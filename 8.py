@@ -2,19 +2,7 @@ from sklearn.cluster import KMeans
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score
-
-# Example data
-data = np.array([[0.1, 0.6], [0.15, 0.71], [0.08, 0.9], [0.16, 0.85],
-                 [0.2, 0.3], [0.25, 0.5], [0.24, 0.1], [0.3, 0.2]])
-
-# Apply K-Means
-kmeans = KMeans(n_clusters=3, random_state=42, n_init='auto')
-kmeans.fit(data)
-
-# Predict for VAR1=0.906 and VAR2=0.606
-predicted_cluster = kmeans.predict([[0.906, 0.606]])
-print("Predicted Cluster:", predicted_cluster[0])
+from sklearn.metrics import accuracy_score, confusion_matrix
 
 # Sample data: 9 combinations of VAR1 and VAR2
 data = {
@@ -25,48 +13,38 @@ data = {
 
 # Convert the data into a pandas DataFrame
 df = pd.DataFrame(data)
-
-# Features (VAR1, VAR2)
 X = df[['VAR1', 'VAR2']].values
 
 # Apply K-means clustering with 3 clusters
-kmeans = KMeans(n_clusters=3, random_state=42, n_init='auto')
+kmeans = KMeans(n_clusters=3, random_state=42, n_init=10)
 kmeans.fit(X)
-
-# Assign clusters to actual classifications
-cluster_labels = kmeans.labels_
-df['Cluster'] = cluster_labels
+df['Cluster'] = kmeans.labels_
 
 # Majority voting to map cluster to class
-cluster_to_class = {}
-for cluster in range(3):
-    mask = df['Cluster'] == cluster
-    most_common_class = df[mask]['Classification'].mode()[0]
-    cluster_to_class[cluster] = most_common_class
-
+cluster_to_class = {c: df[df['Cluster'] == c]['Classification'].mode()[0] for c in range(3)}
 df['Predicted_Class'] = df['Cluster'].map(cluster_to_class)
 
-# Compute accuracy (informally)
+# Compute accuracy and confusion matrix
 accuracy = accuracy_score(df['Classification'], df['Predicted_Class'])
-print(f"Accuracy of K-means clustering: {accuracy:.2f}")
+conf_matrix = confusion_matrix(df['Classification'], df['Predicted_Class'], labels=['Class A', 'Class B', 'Class C'])
 
-# New data point: VAR1 = 0.906, VAR2 = 0.606
+# Predict for new data point
 new_point = np.array([[0.906, 0.606]])
-
-# Predict the cluster for the new data point
-cluster = kmeans.predict(new_point)
-
-# Find the centroid for the predicted cluster
+cluster = kmeans.predict(new_point)[0]
 centroid = kmeans.cluster_centers_[cluster]
 
-# Output the predicted cluster and centroid
-print(f"Predicted Cluster for VAR1=0.906, VAR2=0.606: Cluster {cluster[0]}")
+# Print results in the requested format
+print(f"Predicted Cluster: {cluster}")
+print(f"Accuracy of K-means clustering: {accuracy:.2f}")
+print(f"Predicted Cluster for VAR1=0.906, VAR2=0.606: Cluster {cluster}")
 print(f"Centroid of this Cluster: {centroid}")
+print("Confusion Matrix:")
+print(conf_matrix)
 
-# Optional: Plot the clusters and centroids
+# Plot clusters and centroids
 plt.scatter(df['VAR1'], df['VAR2'], c=kmeans.labels_, cmap='viridis', label='Data Points')
-plt.scatter(centroid[0][0], centroid[0][1], c='red', marker='X', s=200, label='Centroid')
-plt.scatter(new_point[0][0], new_point[0][1], c='blue', marker='o', s=100, label='New Point (VAR1=0.906, VAR2=0.606)')
+plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], c='red', marker='x', s=200, label='Centroids')
+plt.scatter(new_point[0][0], new_point[0][1], c='blue', marker='o', s=100, label='New Point')
 plt.xlabel('VAR1')
 plt.ylabel('VAR2')
 plt.legend()
