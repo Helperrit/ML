@@ -1,37 +1,74 @@
-# Write a program to Demonstrate for the following data, which specify classifications for nine combinations of VAR1 and VAR2 predict a classification for a case where VAR1=0.906 and VAR2=0.606, using the result of k-means clustering with 3 means (i.e., 3centroids)
+from sklearn.cluster import KMeans
 import numpy as np
 import pandas as pd
-from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score
 
-# Offline data
+# Example data
+data = np.array([[0.1, 0.6], [0.15, 0.71], [0.08, 0.9], [0.16, 0.85],
+                 [0.2, 0.3], [0.25, 0.5], [0.24, 0.1], [0.3, 0.2]])
+
+# Apply K-Means
+kmeans = KMeans(n_clusters=3, random_state=42, n_init='auto')
+kmeans.fit(data)
+
+# Predict for VAR1=0.906 and VAR2=0.606
+predicted_cluster = kmeans.predict([[0.906, 0.606]])
+print("Predicted Cluster:", predicted_cluster[0])
+
+# Sample data: 9 combinations of VAR1 and VAR2
 data = {
-    'VAR1': [1.0, 1.1, 0.9, 0.8, 0.7, 1.2, 0.6, 0.5, 0.4],
-    'VAR2': [0.8, 0.9, 0.7, 0.6, 0.5, 0.8, 0.4, 0.3, 0.2],
-    'Classification': ['A', 'A', 'A', 'B', 'B', 'A', 'B', 'C', 'C']
+    'VAR1': [0.123, 0.345, 0.567, 0.234, 0.456, 0.789, 0.987, 0.876, 0.654],
+    'VAR2': [0.234, 0.678, 0.890, 0.345, 0.567, 0.456, 0.123, 0.234, 0.789],
+    'Classification': ['Class A', 'Class B', 'Class A', 'Class C', 'Class B', 'Class C', 'Class A', 'Class C', 'Class B']
 }
 
-# Create DataFrame
+# Convert the data into a pandas DataFrame
 df = pd.DataFrame(data)
-X = df[['VAR1', 'VAR2']]
 
-# Apply k-means clustering with 3 centroids
-kmeans = KMeans(n_clusters=3, random_state=42)
+# Features (VAR1, VAR2)
+X = df[['VAR1', 'VAR2']].values
+
+# Apply K-means clustering with 3 clusters
+kmeans = KMeans(n_clusters=3, random_state=42, n_init='auto')
 kmeans.fit(X)
 
-# Predict the cluster for a new point
-new_point = np.array([[0.906, 0.606]])
-predicted_cluster = kmeans.predict(new_point)
+# Assign clusters to actual classifications
+cluster_labels = kmeans.labels_
+df['Cluster'] = cluster_labels
 
-# Visualize the clusters and the new point
-plt.scatter(X['VAR1'], X['VAR2'], c=kmeans.labels_, cmap='viridis', label='Data Points')
-plt.scatter(kmeans.cluster_centers_[:, 0], kmeans.cluster_centers_[:, 1], s=200, c='red', label='Centroids')
-plt.scatter(new_point[:, 0], new_point[:, 1], s=100, c='blue', label='New Point', marker='X')
+# Majority voting to map cluster to class
+cluster_to_class = {}
+for cluster in range(3):
+    mask = df['Cluster'] == cluster
+    most_common_class = df[mask]['Classification'].mode()[0]
+    cluster_to_class[cluster] = most_common_class
+
+df['Predicted_Class'] = df['Cluster'].map(cluster_to_class)
+
+# Compute accuracy (informally)
+accuracy = accuracy_score(df['Classification'], df['Predicted_Class'])
+print(f"Accuracy of K-means clustering: {accuracy:.2f}")
+
+# New data point: VAR1 = 0.906, VAR2 = 0.606
+new_point = np.array([[0.906, 0.606]])
+
+# Predict the cluster for the new data point
+cluster = kmeans.predict(new_point)
+
+# Find the centroid for the predicted cluster
+centroid = kmeans.cluster_centers_[cluster]
+
+# Output the predicted cluster and centroid
+print(f"Predicted Cluster for VAR1=0.906, VAR2=0.606: Cluster {cluster[0]}")
+print(f"Centroid of this Cluster: {centroid}")
+
+# Optional: Plot the clusters and centroids
+plt.scatter(df['VAR1'], df['VAR2'], c=kmeans.labels_, cmap='viridis', label='Data Points')
+plt.scatter(centroid[0][0], centroid[0][1], c='red', marker='X', s=200, label='Centroid')
+plt.scatter(new_point[0][0], new_point[0][1], c='blue', marker='o', s=100, label='New Point (VAR1=0.906, VAR2=0.606)')
 plt.xlabel('VAR1')
 plt.ylabel('VAR2')
-plt.title('K-Means Clustering (3 Centroids)')
 plt.legend()
+plt.title('K-means Clustering with 3 Centroids')
 plt.show()
-
-# Output predicted cluster for the new point
-print("Predicted cluster for VAR1=0.906 and VAR2=0.606:", predicted_cluster[0])
