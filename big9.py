@@ -8,7 +8,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 
 # Load the CSV dataset (replace with the actual path to your CSV file)
-file_path = '/content/Iris.csv'  # Replace with the path to your CSV file
+file_path = 'Iris.csv'  # Replace with the path to your CSV file
 data = pd.read_csv(file_path)
 
 # Display the first 5 rows of the dataset
@@ -36,9 +36,10 @@ print("\nAccuracy of the KNN model:", accuracy)
 # Detailed classification report
 print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
-# Compute confusion matrix
-conf_matrix = confusion_matrix(y_test, y_pred)
-print("\nConfusion Matrix:\n", conf_matrix)
+# Compute confusion matrix and Accuracy score
+ 
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print('Accuracy score:', accuracy_score(y_test, y_pred))
 
 # Visualize the confusion matrix
 plt.figure(figsize=(6, 4))
